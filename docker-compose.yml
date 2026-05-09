@@ -1,0 +1,36 @@
+version: "3.8"
+
+# ============================================================
+# Leadgen Engine — Docker compose
+# Si connette al network astro-funnel_default (esterno) per
+# essere raggiungibile da astro-funnel-nginx-1
+# ============================================================
+
+services:
+  leadgen-engine:
+    build: .
+    container_name: leadgen-engine
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-2500}
+      MAX_PARALLEL_PINGS: ${MAX_PARALLEL_PINGS:-20}
+      TRUSTEDFORM_API_KEY: ${TRUSTEDFORM_API_KEY:-}
+      JORNAYA_ACCOUNT_ID: ${JORNAYA_ACCOUNT_ID:-}
+    ports:
+      # Bind solo a localhost — nginx in container raggiunge via network condivisa
+      - "127.0.0.1:3010:3010"
+    networks:
+      - astro_default
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3010/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  astro_default:
+    name: astro-funnel_default
+    external: true

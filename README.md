@@ -88,6 +88,13 @@ scripts/
 
 ## Note compliance
 
+## Deploy
+
+VPS: `91.98.85.227` — subdomain `leadgen.trackitwhen.com` — porta interna `3010`.
+Vedi `deploy/SETUP-VPS.md` per la procedura step-by-step.
+
+## Note compliance
+
 ⚠️ TCPA exposure è reale. PRIMA di andare live in produzione:
 - TrustedForm o Jornaya cert su OGNI lead
 - Polizza E&O in vigore

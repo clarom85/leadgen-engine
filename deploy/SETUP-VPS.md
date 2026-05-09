@@ -1,9 +1,11 @@
 # VPS Deploy — Leadgen Engine
 
-Deploy guidato sulla VPS `178.104.17.161` con PM2 + nginx + Cloudflare DNS + Let's Encrypt SSL.
+Deploy guidato sulla VPS `91.98.85.227` (la stessa di Astraze) con PM2 + nginx + Cloudflare DNS + Let's Encrypt SSL.
 
-**Subdomain**: `leadgen.vireonmedia.com`
-**Porta interna**: `3010` (3001 è già usata da email-api)
+**Subdomain**: `leadgen.trackitwhen.com`
+**Porta interna**: `3010`
+
+⚠️ Astraze gira in Docker sulla stessa VPS — verifica prima che la porta 3010 sia libera con: `netstat -tlnp | grep 3010`
 
 ---
 
@@ -11,28 +13,28 @@ Deploy guidato sulla VPS `178.104.17.161` con PM2 + nginx + Cloudflare DNS + Let
 
 - Repo GitHub creato e codice pushato (es. `clarom85/leadgen-engine`)
 - Cloudflare token nel tuo `.env` esistente (`CLOUDFLARE_API_TOKEN`)
-- VPS con accesso SSH root: `ssh root@178.104.17.161`
+- VPS con accesso SSH root: `ssh root@91.98.85.227`
 - Neon DATABASE_URL pronto (creato in console.neon.tech, project `leadgen-engine`)
 
 ---
 
 ## Step 1 — Cloudflare DNS
 
-Su [Cloudflare dashboard](https://dash.cloudflare.com/), zona `vireonmedia.com`:
+Su [Cloudflare dashboard](https://dash.cloudflare.com/), zona `trackitwhen.com`:
 - Aggiungi record **A**:
   - Name: `leadgen`
-  - IPv4: `178.104.17.161`
+  - IPv4: `91.98.85.227`
   - Proxy status: **DNS only** (grigio, non arancione) — il proxy CF rompe SSL su Let's Encrypt nella prima emissione. Riattiva proxy dopo che cert è ok.
   - TTL: Auto
 
-Verifica: `dig leadgen.vireonmedia.com +short` → deve restituire `178.104.17.161`.
+Verifica: `dig leadgen.trackitwhen.com +short` → deve restituire `91.98.85.227`.
 
 ---
 
 ## Step 2 — SSH sulla VPS
 
 ```bash
-ssh root@178.104.17.161
+ssh root@91.98.85.227
 ```
 
 ---
@@ -136,7 +138,7 @@ systemctl reload nginx
 apt install -y certbot python3-certbot-nginx
 
 # Emetti cert
-certbot --nginx -d leadgen.vireonmedia.com --non-interactive --agree-tos --email contact@vireonmedia.com
+certbot --nginx -d leadgen.trackitwhen.com --non-interactive --agree-tos --email contact@vireonmedia.com
 ```
 
 Certbot iniettera automaticamente le linee `ssl_certificate` nel config nginx.
@@ -147,16 +149,16 @@ Certbot iniettera automaticamente le linee `ssl_certificate` nel config nginx.
 
 ```bash
 # DNS resolution
-dig leadgen.vireonmedia.com +short
+dig leadgen.trackitwhen.com +short
 
 # HTTP → HTTPS redirect
-curl -I http://leadgen.vireonmedia.com/
+curl -I http://leadgen.trackitwhen.com/
 
 # HTTPS health
-curl https://leadgen.vireonmedia.com/
+curl https://leadgen.trackitwhen.com/
 
 # API smoke test
-curl -X POST https://leadgen.vireonmedia.com/api/leads/elder-wealth \
+curl -X POST https://leadgen.trackitwhen.com/api/leads/elder-wealth \
   -H 'Content-Type: application/json' \
   -d '{
     "data": {
@@ -177,7 +179,7 @@ Atteso: `{"success":true,"lead_id":"...","status":"sold","total_revenue":...}`.
 
 ## Step 11 — Cloudflare proxy ON (opzionale)
 
-Una volta che SSL è verde sul subdomain (`https://leadgen.vireonmedia.com` = ok):
+Una volta che SSL è verde sul subdomain (`https://leadgen.trackitwhen.com` = ok):
 - Torna su Cloudflare DNS
 - Cambia il record `leadgen` a **Proxied** (arancione)
 - Beneficio: DDoS protection + cache + analytics CF
@@ -187,7 +189,7 @@ Una volta che SSL è verde sul subdomain (`https://leadgen.vireonmedia.com` = ok
 ## Update procedure (deploy futuri)
 
 ```bash
-ssh root@178.104.17.161
+ssh root@91.98.85.227
 cd /opt/leadgen-engine
 git fetch origin && git rebase origin/main
 npm install

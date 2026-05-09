@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode
+.idea
+README.md
+deploy/SETUP-VPS.md
+install-output.log
+npm-install.log
+.cf_zone_id.tmp

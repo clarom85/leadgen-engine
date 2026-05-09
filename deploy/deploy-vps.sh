@@ -10,8 +10,8 @@ set -euo pipefail
 APP_DIR="/opt/leadgen-engine"
 APP_PORT="3010"
 APP_NAME="leadgen-engine"
-SUBDOMAIN="leadgen.vireonmedia.com"
-SSL_EMAIL="contact@vireonmedia.com"
+SUBDOMAIN="leadgen.trackitwhen.com"
+SSL_EMAIL="contact@vireonmedia.com"  # cambia se preferisci email diversa
 NGINX_CONF="/etc/nginx/sites-available/leadgen-engine"
 
 log() { printf "\n\033[1;36m▶ %s\033[0m\n" "$*"; }
