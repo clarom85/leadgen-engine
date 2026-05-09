@@ -20,9 +20,9 @@ async function main() {
 
   await exec(
     `UPDATE buyers SET
-       ping_url = REPLACE(ping_url, 'localhost:3000', '127.0.0.1:3010'),
-       post_url = REPLACE(post_url, 'localhost:3000', '127.0.0.1:3010')
-     WHERE ping_url LIKE '%localhost:3000%' OR post_url LIKE '%localhost:3000%'`
+       ping_url = REPLACE(REPLACE(ping_url, 'localhost:3000', '127.0.0.1:3010'), '/_mock/', '/mock/'),
+       post_url = REPLACE(REPLACE(post_url, 'localhost:3000', '127.0.0.1:3010'), '/_mock/', '/mock/')
+     WHERE ping_url LIKE '%localhost:3000%' OR ping_url LIKE '%/_mock/%' OR post_url LIKE '%/_mock/%'`
   );
 
   const rows = await exec<Array<{ name: string; ping_url: string; post_url: string }>>(

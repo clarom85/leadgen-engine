@@ -22,8 +22,8 @@ export default function Home() {
         <ul className="space-y-1 font-mono text-sm">
           <li><code>POST /api/leads/[vertical]</code> — submit lead, trigger ping-tree</li>
           <li><code>POST /api/postback/[buyer]</code> — receive buyer postback</li>
-          <li><code>POST /api/_mock/buyer/[name]/ping</code> — mock buyer (testing only)</li>
-          <li><code>POST /api/_mock/buyer/[name]/post</code> — mock buyer (testing only)</li>
+          <li><code>POST /api/mock/buyer/[name]/ping</code> — mock buyer (testing only)</li>
+          <li><code>POST /api/mock/buyer/[name]/post</code> — mock buyer (testing only)</li>
         </ul>
       </section>
 
