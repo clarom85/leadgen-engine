@@ -46,6 +46,9 @@ CREATE TABLE IF NOT EXISTS buyers (
 CREATE INDEX IF NOT EXISTS idx_buyers_active ON buyers(active) WHERE active = true;
 CREATE INDEX IF NOT EXISTS idx_buyers_verticals ON buyers USING GIN (active_in_verticals);
 
+-- Display name pubblico (One-to-One Consent FCC) — aggiunto post-MVP, idempotente.
+ALTER TABLE buyers ADD COLUMN IF NOT EXISTS display_name TEXT;
+
 -- ============================================================
 -- LEADS — ogni submission del funnel
 -- ============================================================

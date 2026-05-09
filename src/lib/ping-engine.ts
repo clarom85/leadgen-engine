@@ -5,7 +5,7 @@
 
 import { query, queryOne } from './db';
 import { validateLeadData, normalizeLeadData } from './validators';
-import { checkDuplicate, checkIpVelocity, isValidTrustedFormCert } from './compliance';
+import { checkDuplicate, checkIpVelocity, isValidTrustedFormCert, claimTrustedFormCert } from './compliance';
 import type {
   Vertical,
   Buyer,
@@ -293,6 +293,14 @@ export async function processLead(input: LeadInput): Promise<ProcessLeadResult> 
   );
   if (!leadRow) throw new Error('failed_to_insert_lead');
   const leadId = leadRow.id;
+
+  // 5b) Claim TrustedForm cert (best-effort, non blocca)
+  if (input.trustedform_cert_url && isValidTrustedFormCert(input.trustedform_cert_url)) {
+    void claimTrustedFormCert(input.trustedform_cert_url, {
+      lead_id: leadId,
+      vertical: input.vertical_id
+    });
+  }
 
   // 6) Carica buyer attivi nel vertical
   const allBuyers = await query<Buyer>(

@@ -1,12 +1,18 @@
 // ============================================================
 // MOCK BUYER POST ENDPOINT — solo per testing locale
+// Disabilitato di default in prod: gate dietro LEADGEN_MOCK_BUYERS=true
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
+const MOCKS_ENABLED = process.env.LEADGEN_MOCK_BUYERS === 'true';
+
 export async function POST(req: NextRequest, ctx: { params: Promise<{ name: string }> }) {
+  if (!MOCKS_ENABLED) {
+    return NextResponse.json({ error: 'mock_buyers_disabled' }, { status: 404 });
+  }
   const { name } = await ctx.params;
   const body = await req.json().catch(() => ({}));
 

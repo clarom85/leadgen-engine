@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:apply": "tsx scripts/apply-schema.ts",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:extras": "tsx scripts/seed.ts db/seed-extras.sql"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

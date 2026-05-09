@@ -57,6 +57,7 @@ export interface BuyerAuthConfig {
 export interface Buyer {
   id: string;
   name: string;
+  display_name: string | null;
   active: boolean;
   active_in_verticals: string[];
   ping_url: string;

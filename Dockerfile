@@ -15,6 +15,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
+# Build args per env client (NEXT_PUBLIC_*). Sono inline al build time da Next.js.
+ARG NEXT_PUBLIC_TRUSTEDFORM_ENABLED=""
+ARG NEXT_PUBLIC_JORNAYA_ACCOUNT_ID=""
+ARG NEXT_PUBLIC_LEADGEN_DEBUG=""
+ENV NEXT_PUBLIC_TRUSTEDFORM_ENABLED=$NEXT_PUBLIC_TRUSTEDFORM_ENABLED
+ENV NEXT_PUBLIC_JORNAYA_ACCOUNT_ID=$NEXT_PUBLIC_JORNAYA_ACCOUNT_ID
+ENV NEXT_PUBLIC_LEADGEN_DEBUG=$NEXT_PUBLIC_LEADGEN_DEBUG
 # Skip schema apply at build time (DB potrebbe non essere raggiungibile in build phase)
 RUN npm run build
 

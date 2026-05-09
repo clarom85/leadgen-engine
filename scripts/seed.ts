@@ -1,6 +1,8 @@
 // ============================================================
-// Applica db/seed.sql al DB Neon (vertical + buyer mock)
+// Applica un file SQL di seed al DB Neon.
+// Default: db/seed.sql. Argomento: percorso relativo al cwd.
 // Usage: npm run db:seed
+//        npx tsx scripts/seed.ts db/seed-extras.sql
 // ============================================================
 
 import 'dotenv/config';
@@ -14,7 +16,8 @@ async function main() {
     process.exit(1);
   }
 
-  const sqlText = readFileSync(resolve(process.cwd(), 'db/seed.sql'), 'utf8');
+  const targetFile = process.argv[2] ?? 'db/seed.sql';
+  const sqlText = readFileSync(resolve(process.cwd(), targetFile), 'utf8');
   const sql = neon(process.env.DATABASE_URL, { fullResults: false });
 
   const exec = async <T = unknown>(stmt: string): Promise<T> => {
@@ -31,7 +34,7 @@ async function main() {
     .map((s) => s.replace(/--.*$/gm, '').trim())
     .filter((s) => s.length > 0);
 
-  console.log(`🌱 Seeding ${statements.length} rows...`);
+  console.log(`🌱 Seeding ${statements.length} statements from ${targetFile}...`);
 
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i]!;
@@ -49,7 +52,7 @@ async function main() {
   const verticals = await exec<{ count: string }[]>('SELECT COUNT(*)::text as count FROM verticals');
   const buyers = await exec<{ count: string }[]>('SELECT COUNT(*)::text as count FROM buyers');
 
-  console.log(`\n✅ Seed complete`);
+  console.log(`\n✅ Seed complete (from ${targetFile})`);
   console.log(`   Verticals in DB: ${verticals[0]?.count ?? '?'}`);
   console.log(`   Buyers in DB: ${buyers[0]?.count ?? '?'}`);
 }

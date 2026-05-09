@@ -8,7 +8,12 @@ version: "3.8"
 
 services:
   leadgen-engine:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_TRUSTEDFORM_ENABLED: ${NEXT_PUBLIC_TRUSTEDFORM_ENABLED:-}
+        NEXT_PUBLIC_JORNAYA_ACCOUNT_ID: ${NEXT_PUBLIC_JORNAYA_ACCOUNT_ID:-}
+        NEXT_PUBLIC_LEADGEN_DEBUG: ${NEXT_PUBLIC_LEADGEN_DEBUG:-}
     container_name: leadgen-engine
     restart: unless-stopped
     environment:
@@ -18,13 +23,19 @@ services:
       MAX_PARALLEL_PINGS: ${MAX_PARALLEL_PINGS:-20}
       TRUSTEDFORM_API_KEY: ${TRUSTEDFORM_API_KEY:-}
       JORNAYA_ACCOUNT_ID: ${JORNAYA_ACCOUNT_ID:-}
+      # Gate mock buyer endpoints. Set to 'false' (or unset) in production
+      # once real buyer integrations are live. Default 'true' for current dev.
+      LEADGEN_MOCK_BUYERS: ${LEADGEN_MOCK_BUYERS:-true}
+      # NOTE: NEXT_PUBLIC_* env vars sono inline al build time in Next.js.
+      # Per attivare TF/Jornaya client-side, passarle come build args
+      # (vedi Dockerfile) e rebuildare l'immagine.
     ports:
       # Bind solo a localhost — nginx in container raggiunge via network condivisa
       - "127.0.0.1:3010:3010"
     networks:
       - astro_default
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3010/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3010/"]
       interval: 30s
       timeout: 5s
       retries: 3

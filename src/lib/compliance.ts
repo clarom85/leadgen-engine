@@ -60,12 +60,67 @@ export function isValidTrustedFormCert(url: string | null | undefined): boolean 
 }
 
 /**
- * Genera testo TCPA finale — sostituisce placeholder con buyer specifici se serve
- * Per One-to-One Consent (FCC Jan 2025): NON includere buyer multipli nello stesso consenso.
- * Idealmente, ogni buyer ha il suo consenso esplicito.
+ * Genera testo TCPA finale — sostituisce {{buyers}} con lista buyer specifici.
+ * Per One-to-One Consent (FCC Jan 2025): è raccomandato menzionare buyer per nome
+ * piuttosto che riferirsi a "marketing partners" generici.
+ *
+ * Use:
+ *   const text = renderTcpaText(vertical.tcpa_template, ['SmartAsset', 'Trust & Will']);
+ *   // Sostituisce qualsiasi occorrenza di "{{buyers}}" o "marketing partners"
+ *
+ * Se buyerNames è vuoto/undefined, ritorna il template invariato.
  */
-export function renderTcpaText(template: string, _buyerNames?: string[]): string {
-  return template;
+export function renderTcpaText(template: string, buyerNames?: string[]): string {
+  if (!buyerNames || buyerNames.length === 0) return template;
+  const list = formatBuyerList(buyerNames);
+  return template.replace(/\{\{buyers\}\}/g, list);
+}
+
+function formatBuyerList(names: string[]): string {
+  if (names.length === 1) return names[0]!;
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
+/**
+ * Claim TrustedForm cert post-submission (server-side).
+ * Best practice: chiamare entro 72h dalla cattura per ottenere copia retainer.
+ *
+ * No-op se TRUSTEDFORM_API_KEY non è settato. Errori vengono loggati ma NON
+ * bloccano il flow (il lead è già stato registrato).
+ */
+export async function claimTrustedFormCert(
+  certUrl: string,
+  reference?: { lead_id?: string; vertical?: string }
+): Promise<{ claimed: boolean; reason?: string }> {
+  const apiKey = process.env.TRUSTEDFORM_API_KEY;
+  if (!apiKey) return { claimed: false, reason: 'no_api_key' };
+  if (!isValidTrustedFormCert(certUrl)) return { claimed: false, reason: 'invalid_cert_format' };
+
+  // ActiveProspect uses HTTP basic auth: any-username:api-key
+  const auth = Buffer.from(`API:${apiKey}`).toString('base64');
+
+  try {
+    const res = await fetch(certUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        reference: reference?.lead_id ?? '',
+        vendor: reference?.vertical ?? 'leadgen-engine'
+      }).toString()
+    });
+    if (!res.ok) {
+      console.warn(`TrustedForm claim failed: HTTP ${res.status} for ${certUrl}`);
+      return { claimed: false, reason: `http_${res.status}` };
+    }
+    return { claimed: true };
+  } catch (err) {
+    console.warn(`TrustedForm claim error: ${(err as Error).message}`);
+    return { claimed: false, reason: 'network_error' };
+  }
 }
 
 /**
