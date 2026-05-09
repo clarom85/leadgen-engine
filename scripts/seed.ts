@@ -15,7 +15,15 @@ async function main() {
   }
 
   const sqlText = readFileSync(resolve(process.cwd(), 'db/seed.sql'), 'utf8');
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(process.env.DATABASE_URL, { fullResults: false });
+
+  const exec = async <T = unknown>(stmt: string): Promise<T> => {
+    const fn = sql as unknown as ((s: string, params?: unknown[]) => Promise<T>) & {
+      query?: (s: string, params?: unknown[]) => Promise<T>;
+    };
+    if (typeof fn.query === 'function') return await fn.query(stmt, []);
+    return await fn(stmt, []);
+  };
 
   // Per il seed (più semplice, no $$ blocks) split su ; in fine riga
   const statements = sqlText
@@ -28,7 +36,7 @@ async function main() {
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i]!;
     try {
-      await (sql as unknown as { query: (s: string) => Promise<unknown> }).query(stmt);
+      await exec(stmt);
       const preview = stmt.replace(/\s+/g, ' ').slice(0, 100);
       console.log(`  ✓ [${i + 1}/${statements.length}] ${preview}...`);
     } catch (err) {
@@ -38,16 +46,12 @@ async function main() {
   }
 
   // Print summary
-  const verticals = (await (sql as unknown as { query: (s: string) => Promise<{ count: string }[]> }).query(
-    'SELECT COUNT(*)::text as count FROM verticals'
-  ))[0];
-  const buyers = (await (sql as unknown as { query: (s: string) => Promise<{ count: string }[]> }).query(
-    'SELECT COUNT(*)::text as count FROM buyers'
-  ))[0];
+  const verticals = await exec<{ count: string }[]>('SELECT COUNT(*)::text as count FROM verticals');
+  const buyers = await exec<{ count: string }[]>('SELECT COUNT(*)::text as count FROM buyers');
 
   console.log(`\n✅ Seed complete`);
-  console.log(`   Verticals in DB: ${verticals?.count ?? '?'}`);
-  console.log(`   Buyers in DB: ${buyers?.count ?? '?'}`);
+  console.log(`   Verticals in DB: ${verticals[0]?.count ?? '?'}`);
+  console.log(`   Buyers in DB: ${buyers[0]?.count ?? '?'}`);
 }
 
 main().catch((err) => {

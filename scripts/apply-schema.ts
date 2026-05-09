@@ -15,17 +15,27 @@ async function main() {
   }
 
   const sqlText = readFileSync(resolve(process.cwd(), 'db/schema.sql'), 'utf8');
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(process.env.DATABASE_URL, { fullResults: false });
 
   // Split su statement-terminator preservando dollar-quoted blocks ($$...$$)
   const statements = splitSqlStatements(sqlText);
   console.log(`📦 Applying ${statements.length} statements to DB...`);
 
+  // Neon serverless: chiama direttamente la query function come (text, params, opts)
+  // Usiamo `query` method (compatibile con v0.10.x)
+  const exec = async (stmt: string) => {
+    const fn = sql as unknown as ((s: string, params?: unknown[]) => Promise<unknown>) & {
+      query?: (s: string, params?: unknown[]) => Promise<unknown>;
+    };
+    if (typeof fn.query === 'function') return await fn.query(stmt, []);
+    return await fn(stmt, []);
+  };
+
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i]!.trim();
     if (!stmt) continue;
     try {
-      await (sql as unknown as { query: (s: string) => Promise<unknown> }).query(stmt);
+      await exec(stmt);
       const preview = stmt.replace(/\s+/g, ' ').slice(0, 80);
       console.log(`  ✓ [${i + 1}/${statements.length}] ${preview}...`);
     } catch (err) {
